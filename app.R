@@ -373,7 +373,7 @@ server <- function(input, output, session) {
                                         is.na(category) ~ "VII. Other Risks")) %>%
             select(category, Risk, imp, occ, det, Score) %>%
             rename(Impact = imp,
-                   Occurance = occ,
+                   Occurrence = occ,
                    Detectability = det) %>% 
             group_by(category) %>%
             gt() %>%
