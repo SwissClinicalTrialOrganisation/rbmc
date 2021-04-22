@@ -1,0 +1,395 @@
+#
+# This is a Shiny web application. You can run the application by clicking
+# the 'Run App' button above.
+#
+# Find out more about building applications with Shiny here:
+#
+#    http://shiny.rstudio.com/
+#
+
+# options(shiny.reactlog=TRUE) 
+
+library(shiny)
+library(flexdashboard)
+library(shinydashboard)
+library(gt)
+library(dplyr)
+library(magrittr)
+library(tidyr)
+
+texttab <- read.csv("texttable.csv")
+
+
+instpage <- tabItem(tabName = "inst",
+                    h2("General instructions"),
+                    "This", tags$b("Risk-Based Monitoring (RBM) Score Calculator"), "was developed by the Monitoring Platform of the Swiss Clinical
+Trial Organisation (SCTO) and first released in June 2019. These user instructions enable you to calculate and determine
+the recommended monitoring strategy for a particular clinical trial you are planning, by completing a spreadsheet-based
+questionnaire. Once you have completed the information related to each risk score, the RBM Score Calculator provides
+you with an overall answer. Your user feedback is welcome to help us to improve our calculator.")
+
+studpage <- tabItem(tabName = "stud",
+                    h2("General Study Information"),
+                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    textInput("studyname", "Study title/identifier"),
+                    radioButtons("clino_cat", "ClinO risk category", 
+                                 c("A", "B", "C"), inline = TRUE),
+                    textInput("au", "Your name")
+)
+
+partpage <- tabItem(tabName = "part",
+                    h3("I. Participant"),
+                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    uiOutput("I_vuln_fullcontrol"),
+                    uiOutput("I_emsit_fullcontrol"),
+                    uiOutput("I_comp_fullcontrol")
+)
+
+desipage <- tabItem(tabName = "desi",
+                    h3("II. Design"),
+                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    uiOutput("II_comp_fullcontrol"),
+                    uiOutput("II_descomp_fullcontrol"),
+                    uiOutput("II_primcomp_fullcontrol"),
+                    uiOutput("II_primbias_fullcontrol"),
+                    uiOutput("II_trtconcom_fullcontrol"),
+                    uiOutput("II_proccomp_fullcontrol"),
+                    uiOutput("II_withdraw_fullcontrol")
+    )
+safepage <- tabItem(tabName = "safe",
+                    h3("III. Safety"),
+                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    uiOutput("III_reaction_fullcontrol"),
+                    uiOutput("III_interaction_fullcontrol"),
+                    uiOutput("III_cond_fullcontrol")                
+                    )
+intepage <- tabItem(tabName = "inte",
+                    h3("IV. Intervention (IMP, IMD, surgery, etc.)"),
+                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    uiOutput("IV_knowledge_fullcontrol"),
+                    uiOutput("IV_admin_fullcontrol"),
+                    uiOutput("IV_logistics_fullcontrol"),
+                    uiOutput("IV_unblind_fullcontrol")
+                    )
+manapage <- tabItem(tabName = "mana",
+                    h3("V. Management"),
+                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    uiOutput("V_sites_fullcontrol"),
+                    uiOutput("V_tech_fullcontrol"),
+                    uiOutput("V_staff_fullcontrol")
+                    )
+datapage <- tabItem(tabName = "data",
+                    h3("VI. Data"),
+                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    uiOutput("VI_datavol_fullcontrol"),
+                    uiOutput("VI_crfqual_fullcontrol")
+                    )
+othepage <- tabItem(tabName = "othe",
+                    h3("VII. Other"),
+                    "Enter other more trial specific risks here",
+                    uiOutput("otherui"),
+                    actionButton("addOtherInput","Add a risk"),
+                    actionButton("removeOtherInput","Remove a risk")
+                    )
+repopage <- tabItem(tabName = "repo",
+                    h4("Overview of the data entered"),
+                    gt_output("report_table"),
+                    
+                    downloadButton("report", "Generate report")
+                    )
+
+# Define UI for application that draws a histogram
+ui <- dashboardPage(skin = "red",
+    dashboardHeader(title = "SCTO Risk Based Monitoring Score Calculator", titleWidth = 500),
+    dashboardSidebar(
+        sidebarMenu(
+            menuItem("Instructions", tabName = "inst", icon = icon("home")),
+            menuItem("Study information", tabName = "stud"),
+            menuItem("Participants", tabName = "part"),
+            menuItem("Design", tabName = "desi"),
+            menuItem("Safety", tabName = "safe"),
+            menuItem("Intervention", tabName = "inte"),
+            menuItem("Management", tabName = "mana"),
+            menuItem("Data", tabName = "data"),
+            menuItem("Other", tabName = "othe"),
+            menuItem("Report", tabName = "repo")
+        ),
+        sidebarPanel(
+            width = 12,
+            tags$style(HTML(".well {
+                                 background-color: #222d32;
+                                 border-color: #222d32;
+                                 }")),
+            br(),
+            br(),
+            br(),
+            img(src = "logo.png", align = "center")
+        )    
+        
+    ),
+    dashboardBody(
+        tabItems(instpage,
+                 studpage,
+                 partpage,
+                 desipage,
+                 safepage,
+                 intepage,
+                 manapage,
+                 datapage,
+                 othepage,
+                 repopage)
+    )
+)
+# Define server logic required to draw a histogram
+server <- function(input, output, session) {
+    
+    refs <- texttab$ref
+    
+    lapply(refs, function(x){
+        tmp <- texttab[texttab$ref == x, ]
+        uiname <- paste0(x, "_fullcontrol")
+        output[[uiname]] <- renderUI({
+            fluidPage(
+                h4(tmp$Risk),
+                tmp$txt,
+                tags$div(tags$ul(
+                    tags$li(tmp$bullet1),
+                    tags$li(tmp$bullet2),
+                    tags$li(tmp$bullet3)
+                )),
+                radioButtons(paste0(x, "_appl"), "Applicable", 
+                             c("Yes" = 1, "No" = 0),
+                             selected = 1, inline = TRUE),
+                uiOutput(paste0(x, "_control"))
+            )
+        })
+    })
+    
+    
+    # inputs
+    lapply(refs, function(x){
+        uiname <- paste0(x, "_control")
+        output[[uiname]] <- renderUI({
+            if(input[[paste0(x, "_appl")]] == 1){
+                # remove white space after fluidRow - works in RStudio, not firefox
+                div(# style = "margin-bottom:-6em; padding: 0px 0px;", 
+                    tags$style(type = "text/css", ".irs-grid-pol.small {height: 0px;}", 
+                               ".html-widget.gauge {margin-bottom: -100px}"),
+                    fluidRow(
+                        column(3,
+                               sliderInput(paste0(x, "_imp"),
+                                           label = "Impact", min = 1,
+                                           max = 3, value = 1, step = 1),
+                        ),
+                        column(3,
+                               sliderInput(paste0(x, "_occ"),
+                                           label = "Occurance", min = 1,
+                                           max = 3, value = 1, step = 1),
+                        ),
+                        column(3,
+                               sliderInput(paste0(x, "_det"),
+                                           label = "Detectability", min = 1,
+                                           max = 3, value = 1, step = 1)
+                        )
+                        , column(3,
+                               gaugeOutput(paste0(x, "_gauge")))
+                    )
+                )
+            }
+        })
+    })
+    
+    # gauge output
+    lapply(refs, function(x){
+        uiname <- paste0(x, "_gauge")
+        output[[uiname]] <- renderGauge({
+            gauge(input[[paste0(x, "_imp")]] * input[[paste0(x, "_occ")]] * input[[paste0(x, "_det")]],
+                  min = 1, max = 27, label = "Risk score",
+                  sectors = gaugeSectors(c(1,3), c(4,9), c(10,27)))
+        })
+    })
+    
+    # other risks ----
+    ids <- reactive({
+        if (input$addOtherInput == 0) return(NULL)
+        
+        if (input$addOtherInput == 1){
+            output <- 1
+        } else {
+            if(input$addOtherInput > input$removeOtherInput) {
+                output <- 1:(input$addOtherInput-input$removeOtherInput)
+            } else return(NULL)
+            
+        }
+        return(output)
+    })
+    
+    tmp <- observeEvent(ids(), 
+                        lapply(1:length(ids()), function(x){
+                                print(paste("reactive", x))
+                                uiname <- paste0("other", x, "_gauge")
+                                check_input_imp <- paste0("other", x, "_imp")
+                                check_input_occ <- paste0("other", x, "_occ")
+                                check_input_det <- paste0("other", x, "_det")
+                                print(check_input_imp)
+                                print(input[[check_input_imp]])
+                                print(uiname)
+                                output[[uiname]] <- renderGauge({
+                                    gauge(input[[check_input_imp]] * input[[check_input_occ]] * input[[check_input_det]],
+                                          min = 1, max = 27, label = "Risk score",
+                                          sectors = gaugeSectors(c(1,3), c(4,9), c(10,27)))
+                                })
+                                # output[[uiname]] <- renderText("FOOOBAR")
+
+                                return(output)
+                            }))
+    
+    
+    output$otherui <- renderUI({
+        if (is.null(ids())) return(NULL)
+        tagList(
+            lapply(1:length(ids()),function(i){
+                # print(i)
+                check_input_imp <- paste0("other", ids()[i], "_imp")
+                check_input_occ <- paste0("other", ids()[i], "_occ")
+                check_input_det <- paste0("other", ids()[i], "_det")
+                check_input_gauge <- paste0("other", ids()[i], "_gauge")
+                # print(check_input_imp)
+                input_txt <- paste0("other", ids()[i], "_tx")
+                if(is.null(input[[input_txt]])){
+                    # Create a div that contains 3 new sub divs
+                    div(
+                        textInput(input_txt, label = "Describe the risk:", 
+                                  value = input[[input_txt]]),
+                        fluidRow(
+                            column(3,
+                                   sliderInput(check_input_imp,
+                                               label = "Impact", min = 1,
+                                               max = 3, value = 1, step = 1),
+                            ),
+                            column(3,
+                                   sliderInput(check_input_occ,
+                                               label = "Occurance", min = 1,
+                                               max = 3, value = 1, step = 1),
+                            ),
+                            column(3,
+                                   sliderInput(check_input_det,
+                                               label = "Detectability", min = 1,
+                                               max = 3, value = 1, step = 1)
+                            )
+                            , column(3,
+                                     gaugeOutput(check_input_gauge))
+                                     # textOutput(check_input_gauge))
+                        )
+                    )
+                } else {
+                    # Create a div that contains 3 existing sub divs
+                    div(
+                        textInput(input_txt, label = "Describe the risk:",
+                                  value = input[[input_txt]]),
+                        fluidRow(
+                            column(3,
+                                   sliderInput(check_input_imp,
+                                               label = "Impact", min = 1,
+                                               max = 3, value = input[[check_input_imp]], step = 1),
+                            ),
+                            column(3,
+                                   sliderInput(check_input_occ,
+                                               label = "Occurance", min = 1,
+                                               max = 3, value = input[[check_input_occ]], step = 1),
+                            ),
+                            column(3,
+                                   sliderInput(check_input_det,
+                                               label = "Detectability", min = 1,
+                                               max = 3, value = input[[check_input_det]], step = 1)
+                            )
+                            , column(3,
+                                     gaugeOutput(check_input_gauge))
+                        )
+                    )
+                }
+                
+            })
+        )
+    })
+    
+    
+    # report page ----
+    
+    output$report_table <- render_gt({
+        inputs <- reactiveValuesToList(input)
+        inputs <- inputs[!names(inputs) == "sidebarItemExpanded"]
+        tmp <- as.data.frame(inputs) %>%
+            mutate(across(everything(), as.character)) %>%
+            pivot_longer(cols = everything(), 
+                         names_to = c("i", "j"), 
+                         names_pattern = "(.*)_(imp|occ|det|tx|appl)$") %>%
+            filter(!is.na(i)) %>%
+            pivot_wider(id_cols = "i", names_from = "j", values_from = "value") %>%
+            mutate(across(c("imp", "occ", "appl", "det"), as.numeric),
+                   score = imp*occ*det,
+                   appl = case_when(grepl("other", .data$i) ~ 1,
+                                    TRUE ~ appl))
+        
+        # browser()
+        tmp2 <- texttab %>%
+            full_join(tmp, by = c("ref" = "i")) %>%
+            filter(appl > 0)
+        
+        if("tx" %in% names(tmp)) tmp2 <- tmp2 %>% 
+            mutate(Risk = case_when(!is.na(Risk) ~ Risk,
+                                    is.na(Risk) ~ tx))
+        
+         tmp2 %>%
+            mutate(category = case_when(!is.na(category) ~ category,
+                                        is.na(category) ~ "VII. Other Risks")) %>%
+            select(category, Risk, imp, occ, det, score) %>%
+            rename(Impact = imp,
+                   Occurance = occ,
+                   Detectability = det,
+                   Score = score) %>% 
+            group_by(category) %>%
+            gt() %>%
+            data_color(columns = "Score",
+                       colors = scales::col_bin(palette = c("green", "orange", "red"),
+                                                 bins = c(1, 4, 10, 27)),
+                       apply_to = "text")
+         
+         # way to add a plot per row
+         # https://github.com/rstudio/gt/issues/152
+    })
+    
+
+    
+    output$report <- downloadHandler(
+        filename = "report.pdf",
+        content = function(file) {
+            # Copy the report file to a temporary directory before processing it, in
+            # case we don't have write permissions to the current working dir (which
+            # can happen when deployed).
+            
+            tempdir <- tempdir()
+            tempReport <- file.path(tempdir, "report.Rmd")
+            file.copy("report.Rmd", tempReport, overwrite = TRUE)
+            file.copy("www/logo.png", file.path(tempdir, "logo.png"), overwrite = TRUE)
+            
+            # Set up parameters to pass to Rmd document
+            params <- list(input = input,
+                           texttab = texttab)
+            
+            # Knit the document, passing in the `params` list, and eval it in a
+            # child of the global environment (this isolates the code in the document
+            # from the code in this app).
+            rmarkdown::render(input = tempReport, 
+                              output_file = file,
+                              params = params,
+                              envir = new.env(parent = globalenv())
+            )
+        }
+    )
+}
+
+# Run the application 
+# shinyApp(ui = ui, server = server, options = list(display.mode = "showcase"))
+shinyApp(ui = ui, server = server)
+
