@@ -19,7 +19,7 @@ library(tidyr)
 
 texttab <- read.csv("texttable.csv")
 
-
+# pages ----
 instpage <- tabItem(tabName = "inst",
                     h2("General instructions"),
                     "This", tags$b("Risk-Based Monitoring (RBM) Score Calculator"), "was developed by the Monitoring Platform of the Swiss Clinical
@@ -40,6 +40,8 @@ studpage <- tabItem(tabName = "stud",
 partpage <- tabItem(tabName = "part",
                     h3("I. Participant"),
                     "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    tags$br(),
+                    tags$br(),
                     uiOutput("I_vuln_fullcontrol"),
                     uiOutput("I_emsit_fullcontrol"),
                     uiOutput("I_comp_fullcontrol")
@@ -48,6 +50,8 @@ partpage <- tabItem(tabName = "part",
 desipage <- tabItem(tabName = "desi",
                     h3("II. Design"),
                     "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    tags$br(),
+                    tags$br(),
                     uiOutput("II_comp_fullcontrol"),
                     uiOutput("II_descomp_fullcontrol"),
                     uiOutput("II_primcomp_fullcontrol"),
@@ -59,6 +63,8 @@ desipage <- tabItem(tabName = "desi",
 safepage <- tabItem(tabName = "safe",
                     h3("III. Safety"),
                     "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    tags$br(),
+                    tags$br(),
                     uiOutput("III_reaction_fullcontrol"),
                     uiOutput("III_interaction_fullcontrol"),
                     uiOutput("III_cond_fullcontrol")                
@@ -66,6 +72,8 @@ safepage <- tabItem(tabName = "safe",
 intepage <- tabItem(tabName = "inte",
                     h3("IV. Intervention (IMP, IMD, surgery, etc.)"),
                     "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    tags$br(),
+                    tags$br(),
                     uiOutput("IV_knowledge_fullcontrol"),
                     uiOutput("IV_admin_fullcontrol"),
                     uiOutput("IV_logistics_fullcontrol"),
@@ -74,6 +82,8 @@ intepage <- tabItem(tabName = "inte",
 manapage <- tabItem(tabName = "mana",
                     h3("V. Management"),
                     "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    tags$br(),
+                    tags$br(),
                     uiOutput("V_sites_fullcontrol"),
                     uiOutput("V_tech_fullcontrol"),
                     uiOutput("V_staff_fullcontrol")
@@ -81,6 +91,8 @@ manapage <- tabItem(tabName = "mana",
 datapage <- tabItem(tabName = "data",
                     h3("VI. Data"),
                     "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurance and detectability.",
+                    tags$br(),
+                    tags$br(),
                     uiOutput("VI_datavol_fullcontrol"),
                     uiOutput("VI_crfqual_fullcontrol")
                     )
@@ -94,11 +106,19 @@ othepage <- tabItem(tabName = "othe",
 repopage <- tabItem(tabName = "repo",
                     h4("Overview of the data entered"),
                     gt_output("report_table"),
+                    h4("Risk summary"),
+                    gt_output("report_summ"),
                     
+                    h4("Risk matrix"),
+                    "The outlined box indicates the recommended Risk Based Monitoring strategy for your trial, based on the information you have entered.",
+                    gt_output("report_matrix"),
+                    
+                    "Download a PDF report of your results by clicking the 'Generate report' button below",
+                    tags$br(),
                     downloadButton("report", "Generate report")
                     )
 
-# Define UI for application that draws a histogram
+# dashboard UI ----
 ui <- dashboardPage(skin = "red",
     dashboardHeader(title = "SCTO Risk Based Monitoring Score Calculator", titleWidth = 500),
     dashboardSidebar(
@@ -140,7 +160,8 @@ ui <- dashboardPage(skin = "red",
                  repopage)
     )
 )
-# Define server logic required to draw a histogram
+
+# server ----
 server <- function(input, output, session) {
     
     refs <- texttab$ref
@@ -150,17 +171,20 @@ server <- function(input, output, session) {
         uiname <- paste0(x, "_fullcontrol")
         output[[uiname]] <- renderUI({
             fluidPage(
-                h4(tmp$Risk),
-                tmp$txt,
-                tags$div(tags$ul(
-                    tags$li(tmp$bullet1),
-                    tags$li(tmp$bullet2),
-                    tags$li(tmp$bullet3)
-                )),
-                radioButtons(paste0(x, "_appl"), "Applicable", 
-                             c("Yes" = 1, "No" = 0),
-                             selected = 1, inline = TRUE),
-                uiOutput(paste0(x, "_control"))
+                box(title = tmp$Risk,
+                    width = 12,
+                    solidHeader = TRUE,
+                    tmp$txt,
+                    tags$div(tags$ul(
+                        tags$li(tmp$bullet1),
+                        tags$li(tmp$bullet2),
+                        tags$li(tmp$bullet3)
+                    )),
+                    radioButtons(paste0(x, "_appl"), "Applicable", 
+                                 c("Yes" = 1, "No" = 0),
+                                 selected = 1, inline = TRUE),
+                    uiOutput(paste0(x, "_control"))
+                )
             )
         })
     })
@@ -315,8 +339,7 @@ server <- function(input, output, session) {
     
     
     # report page ----
-    
-    output$report_table <- render_gt({
+    inputtab <- reactive({
         inputs <- reactiveValuesToList(input)
         inputs <- inputs[!names(inputs) == "sidebarItemExpanded"]
         tmp <- as.data.frame(inputs) %>%
@@ -327,10 +350,13 @@ server <- function(input, output, session) {
             filter(!is.na(i)) %>%
             pivot_wider(id_cols = "i", names_from = "j", values_from = "value") %>%
             mutate(across(c("imp", "occ", "appl", "det"), as.numeric),
-                   score = imp*occ*det,
+                   Score = imp*occ*det,
                    appl = case_when(grepl("other", .data$i) ~ 1,
                                     TRUE ~ appl))
-        
+    })
+    
+    output$report_table <- render_gt({
+        tmp <- inputtab()
         # browser()
         tmp2 <- texttab %>%
             full_join(tmp, by = c("ref" = "i")) %>%
@@ -343,11 +369,10 @@ server <- function(input, output, session) {
          tmp2 %>%
             mutate(category = case_when(!is.na(category) ~ category,
                                         is.na(category) ~ "VII. Other Risks")) %>%
-            select(category, Risk, imp, occ, det, score) %>%
+            select(category, Risk, imp, occ, det, Score) %>%
             rename(Impact = imp,
                    Occurance = occ,
-                   Detectability = det,
-                   Score = score) %>% 
+                   Detectability = det) %>% 
             group_by(category) %>%
             gt() %>%
             data_color(columns = "Score",
@@ -359,6 +384,51 @@ server <- function(input, output, session) {
          # https://github.com/rstudio/gt/issues/152
     })
     
+    summtab <- reactive({
+        tmp <- inputtab()
+        table(cut(tmp$Score, breaks = c(0, 3, 9, 27), labels = c("Low", "Medium", "High"))) %>% 
+            as.data.frame()
+        
+    })
+    
+    overall <- reactive({
+        tmp <- summtab() %>%
+            mutate(x = 1) %>%
+            pivot_wider(id_cols = x, 
+                        values_from = Freq, names_from = Var1) %>%
+            mutate(row = case_when(High > 1 | Medium > 12 ~ 3,
+                                   High == 1 | (Medium > 5 & Medium < 13) ~ 2,
+                                   Medium < 6 ~ 1))
+    })
+    
+    output$report_summ <- render_gt({
+        summtab() %>% 
+            rename('Risk Level' = Var1,
+                   'Risks in Level' = Freq) %>%
+            gt() 
+    })
+    
+    
+    output$report_matrix <- render_gt({
+        
+        tibble::tribble(~'Number of risks', ~'ClinO A', ~'ClinO B', ~'ClinO C',
+                        'Less than 6 medium risks, no high risks', 'low-risk', 'low-risk', 'medium-risk',
+                        '6 to 12 medium risks or 1 high risk', 'low-risk', 'medium-risk', 'high-risk',
+                        'More than 12 medium risks, more than 1 high risk', 'medium-risk', 'high-risk', 'high-risk'
+                        ) %>%
+            gt() %>%
+            cols_align(align = "center") %>% 
+            data_color(columns = c('ClinO A', 'ClinO B', 'ClinO C'),
+                       colors = scales::col_factor(palette = c("green", "yellow", "orange"),
+                                                   levels = c('low-risk', 'medium-risk', 'high-risk'))) %>%
+            tab_style(locations = cells_body(rows = overall()$row,
+                                             columns = paste("ClinO", input$clino_cat)),
+                      style = list(cell_borders(weight = px(5), color = "black"), 
+                                   cell_text(weight = "bolder"))
+                      )
+        
+        
+    })
 
     
     output$report <- downloadHandler(
