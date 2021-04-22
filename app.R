@@ -16,6 +16,7 @@ library(gt)
 library(dplyr)
 library(magrittr)
 library(tidyr)
+library(shinybusy)
 
 texttab <- read.csv("texttable.csv")
 
@@ -115,7 +116,8 @@ repopage <- tabItem(tabName = "repo",
                     
                     "Download a PDF report of your results by clicking the 'Generate report' button below",
                     tags$br(),
-                    downloadButton("report", "Generate report")
+                    downloadButton("report", "Generate report"),
+                    use_busy_spinner(spin = "fading-circle")
                     )
 
 # dashboard UI ----
@@ -450,11 +452,15 @@ server <- function(input, output, session) {
             # Knit the document, passing in the `params` list, and eval it in a
             # child of the global environment (this isolates the code in the document
             # from the code in this app).
+            
+            show_modal_spinner(text = "Compiling PDF",
+                               spin = "folding-cube")
             rmarkdown::render(input = tempReport, 
                               output_file = file,
                               params = params,
                               envir = new.env(parent = globalenv())
             )
+            remove_modal_spinner()
         }
     )
 }
