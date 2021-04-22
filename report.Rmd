@@ -16,6 +16,7 @@ header-includes:
   - \usepackage[default]{comfortaa}
   - \usepackage[T1]{fontenc}
   - \pagestyle{fancy}
+  - \usepackage{hyperref}
 ---
 
 ```{r, echo = FALSE}
@@ -44,7 +45,7 @@ library(tidyr)
 \fancyhead[R]{Report date: `r Sys.time()`}
 \cfoot[\fancyplain{}{}]{\fancyplain{}{}}
 \rfoot{\thepage\ of \pageref{LastPage}}
-\lfoot{Data entered by `r params$input$au` on `r Sys.Date()`}
+\lfoot{Produced with \href{https://aghaynes.shinyapps.io/rbmc}{RBMC}}
 \thispagestyle{fancy}
 
 <!-- Report content -->
