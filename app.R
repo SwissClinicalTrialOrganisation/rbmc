@@ -20,6 +20,7 @@ library(shinybusy)
 
 texttab <- read.csv("texttable.csv")
 
+
 # pages ----
 instpage <- tabItem(tabName = "inst",
                     h2("General instructions"),
@@ -358,6 +359,7 @@ server <- function(input, output, session) {
     })
     
     output$report_table <- render_gt({
+        
         tmp <- inputtab()
         # browser()
         tmp2 <- texttab %>%
@@ -368,22 +370,23 @@ server <- function(input, output, session) {
             mutate(Risk = case_when(!is.na(Risk) ~ Risk,
                                     is.na(Risk) ~ tx))
         
-         tmp2 %>%
+        tmp3 <- tmp2 %>%
             mutate(category = case_when(!is.na(category) ~ category,
                                         is.na(category) ~ "VII. Other Risks")) %>%
             select(category, Risk, imp, occ, det, Score) %>%
             rename(Impact = imp,
                    Occurrence = occ,
-                   Detectability = det) %>% 
+                   Detectability = det)
+         
+        tmp3 %>% 
             group_by(category) %>%
             gt() %>%
             data_color(columns = "Score",
                        colors = scales::col_bin(palette = c("green", "orange", "red"),
                                                  bins = c(1, 4, 10, 27)),
-                       apply_to = "text")
-         
-         # way to add a plot per row
-         # https://github.com/rstudio/gt/issues/152
+                       apply_to = "text") %>% 
+            cols_align(columns = 2:5, 
+                       align = "center")
     })
     
     summtab <- reactive({
