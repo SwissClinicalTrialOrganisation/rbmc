@@ -359,7 +359,8 @@ server <- function(input, output, session) {
             mutate(across(c("imp", "occ", "appl", "det"), as.numeric),
                    Score = imp*occ*det,
                    appl = case_when(grepl("other", .data$i) ~ 1,
-                                    TRUE ~ appl))
+                                    TRUE ~ appl)) %>% 
+            filter(grepl(paste0("other(", paste0(ids(), collapse = "|"), ")"), .data$i) | !grepl("other", .data$i))
     })
     
     output$report_table <- render_gt({

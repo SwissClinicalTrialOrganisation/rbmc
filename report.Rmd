@@ -82,7 +82,8 @@ tmp <- as.data.frame(inputs) %>%
   mutate(across(c("imp", "occ", "appl", "det"), as.numeric),
          score = imp*occ*det,
          appl = case_when(grepl("other", .data$i) ~ 1,
-                          TRUE ~ appl))
+                          TRUE ~ appl)) %>% 
+  filter(grepl(paste0("other(", paste0(ids(), collapse = "|"), ")"), .data$i) | !grepl("other", .data$i))
 
 # browser()
 tmp2 <- params$texttab %>%
