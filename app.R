@@ -17,6 +17,7 @@ library(dplyr)
 library(magrittr)
 library(tidyr)
 library(shinybusy)
+library(shinyBS)
 
 texttab <- read.csv("texttable.csv")
 
@@ -178,15 +179,18 @@ server <- function(input, output, session) {
                     width = 12,
                     solidHeader = TRUE,
                     tmp$txt,
-                    tags$div(tags$ul(
-                        tags$li(tmp$bullet1),
-                        tags$li(tmp$bullet2),
-                        tags$li(tmp$bullet3)
-                    )),
+                    # tags$div(tags$ul(
+                    #     tags$li(tmp$bullet1),
+                    #     tags$li(tmp$bullet2),
+                    #     tags$li(tmp$bullet3)
+                    # )),
                     radioButtons(paste0(x, "_appl"), "Applicable", 
                                  c("Yes" = 1, "No" = 0),
                                  selected = 1, inline = TRUE),
-                    uiOutput(paste0(x, "_control"))
+                    uiOutput(paste0(x, "_control")),
+                    bsTooltip(paste0(x, "_imp"), tmp$bullet1, options = list(container = "body")),
+                    bsTooltip(paste0(x, "_occ"), tmp$bullet2),
+                    bsTooltip(paste0(x, "_det"), tmp$bullet3)
                 )
             )
         })
