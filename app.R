@@ -224,8 +224,22 @@ server <- function(input, output, session) {
                         )
                         , column(3,
                                gaugeOutput(paste0(x, "_gauge")))
-                    )
+                    ),
+                    radioButtons(paste0(x, "_note_yn"), "Do you want to add a note?", 
+                                 c("Yes" = 1, "No" = 0),
+                                 selected = 0, inline = TRUE),
+                    uiOutput(paste0(x, "_noteUI"))
                 )
+            }
+        })
+    })
+    
+    # notes box
+    lapply(refs, function(x){
+        uiname <- paste0(x, "_noteUI")
+        output[[uiname]] <- renderUI({
+            if(input[[paste0(x, "_note_yn")]] == 1){
+                textInput(paste0(x, "_note"), "Note regarding this risk (optional)")
             }
         })
     })
