@@ -454,7 +454,7 @@ server <- function(input, output, session) {
         
     })
 
-    
+    # compile report ----
     output$report <- downloadHandler(
         filename = "report.pdf",
         content = function(file) {
@@ -468,12 +468,16 @@ server <- function(input, output, session) {
             file.copy("www/logo.png", file.path(tempdir, "logo.png"), overwrite = TRUE)
             
             # Set up parameters to pass to Rmd document
-            params <- list(input = input,
-                           texttab = texttab)
+            params <- list(input = reactiveValuesToList(input),
+                           texttab = texttab, 
+                           overall = overall(),
+                           ids = ids())
             
             # Knit the document, passing in the `params` list, and eval it in a
             # child of the global environment (this isolates the code in the document
             # from the code in this app).
+            
+            dput(params, file = "PARAMS.R")
             
             show_modal_spinner(text = "Compiling PDF",
                                spin = "folding-cube")
@@ -481,7 +485,7 @@ server <- function(input, output, session) {
                               output_file = file,
                               params = params,
                               envir = new.env(parent = globalenv())
-            )
+                              )
             remove_modal_spinner()
         }
     )
