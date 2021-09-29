@@ -190,7 +190,11 @@ server <- function(input, output, session) {
                     uiOutput(paste0(x, "_control")),
                     bsTooltip(paste0(x, "_imp"), tmp$bullet1, options = list(container = "body")),
                     bsTooltip(paste0(x, "_occ"), tmp$bullet2),
-                    bsTooltip(paste0(x, "_det"), tmp$bullet3)
+                    bsTooltip(paste0(x, "_det"), tmp$bullet3),
+                    radioButtons(paste0(x, "_note_yn"), "Do you want to add a note?", 
+                                 c("Yes" = 1, "No" = 0),
+                                 selected = 0, inline = TRUE),
+                    uiOutput(paste0(x, "_noteUI"))
                 )
             )
         })
@@ -210,12 +214,12 @@ server <- function(input, output, session) {
                         column(3,
                                sliderInput(paste0(x, "_imp"),
                                            label = "Impact", min = 1,
-                                           max = 3, value = 1, step = 1),
+                                           max = 3, value = 1, step = 1)
                         ),
                         column(3,
                                sliderInput(paste0(x, "_occ"),
                                            label = "Occurance", min = 1,
-                                           max = 3, value = 1, step = 1),
+                                           max = 3, value = 1, step = 1)
                         ),
                         column(3,
                                sliderInput(paste0(x, "_det"),
@@ -224,12 +228,8 @@ server <- function(input, output, session) {
                         )
                         , column(3,
                                gaugeOutput(paste0(x, "_gauge")))
-                    ),
-                    radioButtons(paste0(x, "_note_yn"), "Do you want to add a note?", 
-                                 c("Yes" = 1, "No" = 0),
-                                 selected = 0, inline = TRUE),
-                    uiOutput(paste0(x, "_noteUI"))
-                )
+                    ))
+                
             }
         })
     })
