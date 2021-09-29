@@ -4,6 +4,8 @@ classoption: a4paper
 params:
   input: NA
   texttab: NA
+  overall: NA
+  ids: NA
 header-includes:
   - \usepackage[T1]{fontenc}
   - \usepackage{lastpage}
