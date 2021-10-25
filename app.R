@@ -18,6 +18,7 @@ library(magrittr)
 library(tidyr)
 library(shinybusy)
 library(shinyBS)
+library(shinyWidgets)
 
 texttab <- read.csv("texttable.csv")
 
@@ -147,7 +148,10 @@ ui <- dashboardPage(skin = "red",
             br(),
             br(),
             br(),
-            img(src = "logo.png", align = "center")
+            img(src = "SCTO_Platforms.png", 
+                align = "center", 
+                width="100%", 
+                style="border: 2px solid #FFFFFF")
         )    
         
     ),
@@ -191,10 +195,12 @@ server <- function(input, output, session) {
                     bsTooltip(paste0(x, "_imp"), tmp$bullet1, options = list(container = "body")),
                     bsTooltip(paste0(x, "_occ"), tmp$bullet2),
                     bsTooltip(paste0(x, "_det"), tmp$bullet3),
-                    radioButtons(paste0(x, "_note_yn"), "Do you want to add a note?", 
-                                 c("Yes" = 1, "No" = 0),
-                                 selected = 0, inline = TRUE),
-                    uiOutput(paste0(x, "_noteUI"))
+                    # radioButtons(paste0(x, "_note_yn"), "Do you want to add a note?", 
+                    #              c("Yes" = 1, "No" = 0),
+                    #              selected = 0, inline = TRUE),
+                    # "Notes are recommended for medium and high risks.",
+                    # uiOutput(paste0(x, "_noteUI"))
+                    textInput(paste0(x, "_note"), "Note regarding this risk")
                 )
             )
         })
@@ -212,19 +218,22 @@ server <- function(input, output, session) {
                                ".html-widget.gauge {margin-bottom: -100px}"),
                     fluidRow(
                         column(3,
-                               sliderInput(paste0(x, "_imp"),
-                                           label = "Impact", min = 1,
-                                           max = 3, value = 1, step = 1)
+                               sliderTextInput(paste0(x, "_imp"),
+                                               label = "Impact", 
+                                               choices = c("Low", "Moderate", "High"), 
+                                               selected = "Low")
                         ),
                         column(3,
-                               sliderInput(paste0(x, "_occ"),
-                                           label = "Occurance", min = 1,
-                                           max = 3, value = 1, step = 1)
+                               sliderTextInput(paste0(x, "_occ"),
+                                           label = "Occurrence", 
+                                           choices = c("Rare", "Occasional", "Frequent"), 
+                                           selected = "Rare")
                         ),
                         column(3,
-                               sliderInput(paste0(x, "_det"),
-                                           label = "Detectability", min = 1,
-                                           max = 3, value = 1, step = 1)
+                               sliderTextInput(paste0(x, "_det"),
+                                           label = "Detectability", 
+                                           choices = c("Simple", "Moderate", "Difficult"), 
+                                           selected = "Simple")
                         )
                         , column(3,
                                gaugeOutput(paste0(x, "_gauge")))
@@ -235,20 +244,29 @@ server <- function(input, output, session) {
     })
     
     # notes box
-    lapply(refs, function(x){
-        uiname <- paste0(x, "_noteUI")
-        output[[uiname]] <- renderUI({
-            if(input[[paste0(x, "_note_yn")]] == 1){
-                textInput(paste0(x, "_note"), "Note regarding this risk (optional)")
-            }
-        })
-    })
+    # lapply(refs, function(x){
+    #     uiname <- paste0(x, "_noteUI")
+    #     output[[uiname]] <- renderUI({
+    #         if(input[[paste0(x, "_note_yn")]] == 1){
+    #             textInput(paste0(x, "_note"), "Note regarding this risk (optional)")
+    #         }
+    #     })
+    # })
     
     # gauge output
     lapply(refs, function(x){
         uiname <- paste0(x, "_gauge")
         output[[uiname]] <- renderGauge({
-            gauge(input[[paste0(x, "_imp")]] * input[[paste0(x, "_occ")]] * input[[paste0(x, "_det")]],
+            imp <- input[[paste0(x, "_imp")]]
+            imp <- as.numeric(factor(imp, levels = c("Low", "Moderate", "High")))
+            occ <- input[[paste0(x, "_occ")]]
+            occ <- as.numeric(factor(occ, levels = c("Rare", "Occasional", "Frequent")))
+            det <- input[[paste0(x, "_det")]]
+            det <- as.numeric(factor(det, levels = c("Simple", "Moderate", "Difficult")))
+            if(input[[paste0(x, "_appl")]] == 0){
+                imp <- occ <- det <- 0
+            }
+            gauge(imp * occ * det,
                   min = 1, max = 27, label = "Risk score",
                   sectors = gaugeSectors(c(1,3), c(4,9), c(10,27)))
         })
@@ -280,7 +298,14 @@ server <- function(input, output, session) {
                                 print(input[[check_input_imp]])
                                 print(uiname)
                                 output[[uiname]] <- renderGauge({
-                                    gauge(input[[check_input_imp]] * input[[check_input_occ]] * input[[check_input_det]],
+                                    imp <- input[[check_input_imp]]
+                                    imp <- as.numeric(factor(imp, levels = c("Low", "Moderate", "High")))
+                                    occ <- input[[check_input_occ]]
+                                    occ <- as.numeric(factor(occ, levels = c("Rare", "Occasional", "Frequent")))
+                                    det <- input[[check_input_det]]
+                                    det <- as.numeric(factor(det, levels = c("Simple", "Moderate", "Difficult")))
+                                    gauge(imp * occ * det,
+                                    # gauge(input[[check_input_imp]] * input[[check_input_occ]] * input[[check_input_det]],
                                           min = 1, max = 27, label = "Risk score",
                                           sectors = gaugeSectors(c(1,3), c(4,9), c(10,27)))
                                 })
@@ -308,19 +333,31 @@ server <- function(input, output, session) {
                                   value = input[[input_txt]]),
                         fluidRow(
                             column(3,
-                                   sliderInput(check_input_imp,
-                                               label = "Impact", min = 1,
-                                               max = 3, value = 1, step = 1),
+                                   # sliderInput(check_input_imp,
+                                   #             label = "Impact", min = 1,
+                                   #             max = 3, value = 1, step = 1),
+                                   sliderTextInput(check_input_imp,
+                                                   label = "Impact", 
+                                                   choices = c("Low", "Moderate", "High"), 
+                                                   selected = "Low")
                             ),
                             column(3,
-                                   sliderInput(check_input_occ,
-                                               label = "Occurance", min = 1,
-                                               max = 3, value = 1, step = 1),
+                                   # sliderInput(check_input_occ,
+                                   #             label = "Occurance", min = 1,
+                                   #             max = 3, value = 1, step = 1),
+                                   sliderTextInput(check_input_occ,
+                                                   label = "Occurance", 
+                                                   choices = c("Rare", "Occasional", "Frequent"), 
+                                                   selected = "Rare")
                             ),
                             column(3,
-                                   sliderInput(check_input_det,
-                                               label = "Detectability", min = 1,
-                                               max = 3, value = 1, step = 1)
+                                   # sliderInput(check_input_det,
+                                   #             label = "Detectability", min = 1,
+                                   #             max = 3, value = 1, step = 1)
+                                   sliderTextInput(check_input_det,
+                                                   label = "Detectability", 
+                                                   choices = c("Simple", "Moderate", "Difficult"), 
+                                                   selected = "Simple")
                             )
                             , column(3,
                                      gaugeOutput(check_input_gauge))
@@ -334,19 +371,22 @@ server <- function(input, output, session) {
                                   value = input[[input_txt]]),
                         fluidRow(
                             column(3,
-                                   sliderInput(check_input_imp,
-                                               label = "Impact", min = 1,
-                                               max = 3, value = input[[check_input_imp]], step = 1),
+                                   sliderTextInput(check_input_imp,
+                                                   label = "Impact", 
+                                                   choices = c("Low", "Moderate", "High"), 
+                                                   selected = "Low"),
                             ),
                             column(3,
-                                   sliderInput(check_input_occ,
-                                               label = "Occurrence", min = 1,
-                                               max = 3, value = input[[check_input_occ]], step = 1),
+                                   sliderTextInput(check_input_occ,
+                                                   label = "Occurance", 
+                                                   choices = c("Rare", "Occasional", "Frequent"), 
+                                                   selected = "Rare"),
                             ),
                             column(3,
-                                   sliderInput(check_input_det,
-                                               label = "Detectability", min = 1,
-                                               max = 3, value = input[[check_input_det]], step = 1)
+                                   sliderTextInput(check_input_det,
+                                                   label = "Detectability", 
+                                                   choices = c("Simple", "Moderate", "Difficult"), 
+                                                   selected = "Simple")
                             )
                             , column(3,
                                      gaugeOutput(check_input_gauge))
@@ -370,7 +410,13 @@ server <- function(input, output, session) {
                          names_pattern = "(.*)_(imp|occ|det|tx|appl)$") %>%
             filter(!is.na(i)) %>%
             pivot_wider(id_cols = "i", names_from = "j", values_from = "value") %>%
-            mutate(across(c("imp", "occ", "appl", "det"), as.numeric),
+            mutate(
+                imp = factor(imp, c("Low", "Moderate", "High")),
+                occ = factor(occ, c("Rare", "Occasional", "Frequent")),
+                det = factor(det, c("Simple", "Moderate", "Difficult")),
+                across(c("imp", "occ", "appl", "det"), as.numeric),
+                across(c("imp", "occ", "det"), ~ case_when(appl == 0 ~ 0,
+                                                         TRUE ~ .)),
                    Score = imp*occ*det,
                    appl = case_when(grepl("other", .data$i) ~ 1,
                                     TRUE ~ appl)) %>% 
@@ -465,7 +511,7 @@ server <- function(input, output, session) {
             tempdir <- tempdir()
             tempReport <- file.path(tempdir, "report.Rmd")
             file.copy("report.Rmd", tempReport, overwrite = TRUE)
-            file.copy("www/logo.png", file.path(tempdir, "logo.png"), overwrite = TRUE)
+            file.copy("www/SCTO_Platforms.png", file.path(tempdir, "logo.png"), overwrite = TRUE)
             
             # Set up parameters to pass to Rmd document
             params <- list(input = reactiveValuesToList(input),
