@@ -1,5 +1,7 @@
 ---
-output: pdf_document
+output: 
+  pdf_document:
+    keep_md: true
 classoption: a4paper
 params:
   input: NA
@@ -19,14 +21,17 @@ header-includes:
   - \usepackage[T1]{fontenc}
   - \pagestyle{fancy}
   - \usepackage{hyperref}
+  - \usepackage{lscape}
+  - \usepackage{pdflscape}
 ---
 
-```{r, echo = FALSE}
+```{r setup, include = FALSE}
 options(Encoding="UTF-8")
 library(gt)
 library(dplyr)
 library(magrittr)
 library(tidyr)
+library(btabler)
 library(flextable)
 set_flextable_defaults(fonts_ignore = TRUE, 
                        font.size = 9)
@@ -48,6 +53,7 @@ set_flextable_defaults(fonts_ignore = TRUE,
 
 <!-- header/footer -->
 \fancyhead[R]{Report date: `r Sys.time()`}
+\fancyhead[L]{`r params$input$studyname`}
 \cfoot[\fancyplain{}{}]{\fancyplain{}{}}
 \rfoot{\thepage\ of \pageref{LastPage}}
 \lfoot{Produced with \href{https://aghaynes.shinyapps.io/rbmc}{RBMC}}
@@ -84,19 +90,18 @@ mat <- tibble::tribble(~'Number of risks', ~'ClinO A', ~'ClinO B', ~'ClinO C',
                         ) 
 
 ```
-Based on the information entered, this the monitoring strategy to apply is `r mat[params$overall$row, paste("ClinO", params$input$clino_cat)]`. 
+Based on the assumptions fed into the RBM score calculator, the study risk is `r mat[params$overall$row, paste("ClinO", params$input$clino_cat)]` and we thus recommend applying the monitoring strategy for \textbf{`r mat[params$overall$row, paste("ClinO", params$input$clino_cat)]`-risk trials}. 
 
 ```{r overall-table, echo = FALSE}
-overall <- data.frame(Level = c("Low", "Medium", "High"),
-           N = c(params$overall$Low, params$overall$Medium, params$overall$High))
+overall <- data.frame(Level = c("High", "Medium", "Low"),
+           N = c(params$overall$High, params$overall$Medium, params$overall$Low))
 names(overall)[2] <- "Number of risk factors"
 overall %>% 
   flextable() %>% 
-  autofit()  %>% 
-  align(j = 2, align = "center", part = "all")
+  flextable::align(j = 2, align = "center", part = "all")
 ```
 
-The following points were entered as high risk:
+The following risks are rated as high in this trial:
 
 ```{r high-risk, echo = FALSE}
 tmp <- as.data.frame(inputs) %>%
@@ -106,7 +111,12 @@ tmp <- as.data.frame(inputs) %>%
                names_pattern = "(.*)_(imp|occ|det|tx|appl|note)$") %>%
   filter(!is.na(i)) %>%
   pivot_wider(id_cols = "i", names_from = "j", values_from = "value") %>%
-  mutate(across(c("imp", "occ", "appl", "det"), as.numeric),
+  mutate(imp = factor(imp, c("Low", "Moderate", "High")),
+         occ = factor(occ, c("Rare", "Occasional", "Frequent")),
+         det = factor(det, c("Simple", "Moderate", "Difficult")),
+         across(c("imp", "occ", "appl", "det"), as.numeric),
+         across(c("imp", "occ", "det"), ~ case_when(appl == 0 ~ 0,
+                                                  TRUE ~ .)),
          score = imp*occ*det,
          appl = case_when(grepl("other", .data$i) ~ 1,
                           TRUE ~ appl)) %>% 
@@ -115,8 +125,7 @@ tmp <- as.data.frame(inputs) %>%
 
 # browser()
 tmp2 <- params$texttab %>%
-  full_join(tmp, by = c("ref" = "i")) %>%
-  filter(appl > 0)
+  full_join(tmp, by = c("ref" = "i")) 
 
 tmp2 %>% 
   filter(score > 9) %>% 
@@ -130,7 +139,7 @@ tmp2 %>%
 
 ```
 
-The following points were entered as medium risk:
+The following risks are rated as medium in this trial:
 
 ```{r medium-risk, echo = FALSE}
 tmp2 %>% 
@@ -149,7 +158,9 @@ tmp2 %>%
 \vspace{1cm}
 \scriptsize
 
-```{r risk-tabs, echo = FALSE}
+\begin{landscape}
+
+```{r risk-tabs, echo = FALSE, eval = FALSE}
 
 
 if("tx" %in% names(tmp)) tmp2 <- tmp2 %>% 
@@ -173,11 +184,71 @@ tmp2 %>%
   width(1, 2.5, unit = "cm") %>% 
   width(2, 4, unit = "cm") %>% 
   width(3:6, 2, unit = "cm") %>% 
-  align(j = 3:6, align = "center", part = "all")
+  flextable::align(j = 3:6, align = "center", part = "all")
   
 
 ```
 
+```{r risk-tabs-gt, echo = FALSE, eval = FALSE}
+if("tx" %in% names(tmp)) tmp2 <- tmp2 %>% 
+  mutate(Risk = case_when(!is.na(Risk) ~ Risk,
+                          is.na(Risk) ~ tx))
+
+tmp2 %>%
+  mutate(category = case_when(!is.na(category) ~ category,
+                              is.na(category) ~ "VII. Other Risks")) %>%
+  select(category, Risk, note, imp, occ, det, score) %>%
+  rename(Impact = imp,
+         Occurance = occ,
+         Detectability = det,
+         Score = score,
+         Category = category,
+         Note = note
+         ) %>% 
+  gt() %>% 
+  cols_width(Note ~ px(100),
+             Risk ~ px(100)) %>% 
+  fmt_missing(columns = everything(), rows = everything(), missing_text = "") %>% 
+  tab_style(
+    style = cell_fill("red"),
+    locations = cells_body(
+      columns = "Score",
+      rows = Score > 9
+    ))
+
+```
+
+
+```{r risk-tabs-btable, echo = FALSE, eval = TRUE, results='asis', warning = FALSE}
+if("tx" %in% names(tmp)) tmp2 <- tmp2 %>% 
+  mutate(Risk = case_when(!is.na(Risk) ~ Risk,
+                          is.na(Risk) ~ tx))
+
+tmp2 %>%
+  mutate(category = case_when(!is.na(category) ~ category,
+                              is.na(category) ~ "VII. Other Risks")) %>%
+  mutate(across(c("occ", "det", "imp", "score"), ~ sprintf("%1.0f", .), .names = "{.col}_s"),
+         # score_s = case_when(score < 4 & score > 0 ~ paste0("\\cellcolor{green}", score_s),
+         #                   score >= 4 & score < 10 ~ paste0("\\cellcolor{orange}", score_s),
+         #                   score >= 10 ~ paste0("\\cellcolor{red}", score_s))
+         ) %>% 
+  rename(Impact = imp_s,
+         Occurrence = occ_s,
+         Detectability = det_s,
+         Score = score_s,
+         Category = category,
+         Note = note,
+         ) %>% 
+  select(Category, Risk, Note, Impact, Occurrence, Detectability, Score) %>%
+  mutate(
+    across(everything(), as.character),
+    across(everything(), function(x) case_when(x == "NA" ~ "", TRUE ~ x))) %>% 
+  xtable(align = "p{1.1cm}p{3.5cm}p{5cm}p{6cm}cccc", digits = 0) %>% 
+  print(tabular.environment = "longtable", include.rownames = FALSE, )
+```
+
+
+\end{landscape}
 
 \pagebreak
 
@@ -193,7 +264,7 @@ mat %>%
   bg(i = mat$`ClinO C` == "medium", j = 4, bg = "orange") %>% 
   bg(i = mat$`ClinO B` == "high", j = 3, bg = "red") %>% 
   bg(i = mat$`ClinO C` == "high", j = 4, bg = "red") %>% 
-  align(align = "center", part = "all") %>% 
+  flextable::align(align = "center", part = "all") %>% 
   # border(i = params$overall$row, j = paste("ClinO", params$input$clino_cat), border = officer::fp_border(width = 5)) %>% 
   fontsize(i = params$overall$row, j = paste("ClinO", params$input$clino_cat), size = 10) %>% 
   bold(i = params$overall$row, j = paste("ClinO", params$input$clino_cat)) %>% 
