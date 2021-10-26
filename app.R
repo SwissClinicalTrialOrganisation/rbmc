@@ -51,14 +51,21 @@ partpage <- tabItem(tabName = "part",
                     uiOutput("I_comp_fullcontrol")
 )
 
-desipage <- tabItem(tabName = "desi",
-                    h3("II. Design"),
+desipage1 <- tabItem(tabName = "desi1",
+                    h3("II. Design complexity"),
                     "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
                     tags$br(),
                     tags$br(),
-                    uiOutput("II_comp_fullcontrol"),
-                    uiOutput("II_descomp_fullcontrol"),
-                    uiOutput("II_primcomp_fullcontrol"),
+                    uiOutput("IIc_comp_fullcontrol"),
+                    uiOutput("IIc_descomp_fullcontrol"),
+                    uiOutput("IIc_primcomp_fullcontrol")
+    )
+
+desipage2 <- tabItem(tabName = "desi2",
+                    h3("II. Design (other issues)"),
+                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
+                    tags$br(),
+                    tags$br(),
                     uiOutput("II_primbias_fullcontrol"),
                     uiOutput("II_trtconcom_fullcontrol"),
                     uiOutput("II_proccomp_fullcontrol"),
@@ -131,7 +138,8 @@ ui <- dashboardPage(skin = "red",
             menuItem("Instructions", tabName = "inst", icon = icon("home")),
             menuItem("Study information", tabName = "stud"),
             menuItem("Participants", tabName = "part"),
-            menuItem("Design", tabName = "desi"),
+            menuItem("Design (complexity)", tabName = "desi1"),
+            menuItem("Design (other)", tabName = "desi2"),
             menuItem("Safety", tabName = "safe"),
             menuItem("Intervention", tabName = "inte"),
             menuItem("Management", tabName = "mana"),
@@ -159,7 +167,8 @@ ui <- dashboardPage(skin = "red",
         tabItems(instpage,
                  studpage,
                  partpage,
-                 desipage,
+                 desipage1,
+                 desipage2,
                  safepage,
                  intepage,
                  manapage,
@@ -188,14 +197,18 @@ server <- function(input, output, session) {
                     #     tags$li(tmp$bullet2),
                     #     tags$li(tmp$bullet3)
                     # )),
-                    radioButtons(paste0(x, "_appl"), "Applicable", 
+                    radioButtons(paste0(x, "_appl"), "Applicable",
                                  c("Yes" = 1, "No" = 0),
                                  selected = 1, inline = TRUE),
+                    # message(paste0(x, "_control")),
+                    # message(tmp$bullet1),
+                    # message(tmp$bullet2),
+                    # message(tmp$bullet3),
                     uiOutput(paste0(x, "_control")),
                     bsTooltip(paste0(x, "_imp"), tmp$bullet1, options = list(container = "body")),
                     bsTooltip(paste0(x, "_occ"), tmp$bullet2),
                     bsTooltip(paste0(x, "_det"), tmp$bullet3),
-                    # radioButtons(paste0(x, "_note_yn"), "Do you want to add a note?", 
+                    # radioButtons(paste0(x, "_note_yn"), "Do you want to add a note?",
                     #              c("Yes" = 1, "No" = 0),
                     #              selected = 0, inline = TRUE),
                     # "Notes are recommended for medium and high risks.",
@@ -205,7 +218,6 @@ server <- function(input, output, session) {
             )
         })
     })
-    
     
     # inputs
     lapply(refs, function(x){
@@ -242,16 +254,6 @@ server <- function(input, output, session) {
             }
         })
     })
-    
-    # notes box
-    # lapply(refs, function(x){
-    #     uiname <- paste0(x, "_noteUI")
-    #     output[[uiname]] <- renderUI({
-    #         if(input[[paste0(x, "_note_yn")]] == 1){
-    #             textInput(paste0(x, "_note"), "Note regarding this risk (optional)")
-    #         }
-    #     })
-    # })
     
     # gauge output
     lapply(refs, function(x){
