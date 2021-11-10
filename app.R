@@ -19,6 +19,8 @@ library(tidyr)
 library(shinybusy)
 library(shinyBS)
 library(shinyWidgets)
+library(promises)
+library(future)
 
 texttab <- read.csv("texttable.csv")
 
@@ -26,15 +28,45 @@ texttab <- read.csv("texttable.csv")
 # pages ----
 instpage <- tabItem(tabName = "inst",
                     h2("General instructions"),
-                    "This", tags$b("Risk-Based Monitoring (RBM) Score Calculator"), "was developed by the Monitoring Platform of the Swiss Clinical
-Trial Organisation (SCTO) and first released in June 2019. These user instructions enable you to calculate and determine
-the recommended monitoring strategy for a particular clinical trial you are planning, by completing a spreadsheet-based
-questionnaire. Once you have completed the information related to each risk score, the RBM Score Calculator provides
-you with an overall answer. Your user feedback is welcome to help us to improve our calculator.")
+                    "This", tags$b("Risk-Based Monitoring (RBM) Score Calculator"), 
+                    "was developed by the Monitoring Platform of the Swiss Clinical
+                    Trial Organisation (SCTO)." ,
+                    tags$br(),
+                    "These user instructions enable you to calculate and determine
+                    the recommended monitoring strategy for a particular clinical 
+                    trial you are planning. On the tabs on the left, you will be 
+                    presented with a variety of questions about your trial. 
+                    For each question, you should indicated the impact of the topic 
+                    on the trial, the frequency with which the risk might happen 
+                    and the detectability of the risk. ",
+                    tags$br(),
+                    tags$br(),
+                    "As an example, consider a trial with very complicated inclusion 
+                    criteria. The impact of having such a complicated inclusion 
+                    criteria is high because you risk including participants that 
+                    are not eligible for participation. Because of the complexity, 
+                    it might also happen often, so occurence is perhaps occasional. 
+                    Detecting wrongly included participants might also be difficult. 
+                    We can also enter a note of our reasoning.", 
+                    tags$br(),
+                    tags$br(),
+                    img(src = "demo.png", 
+                        align = "center", 
+                        width="400px", 
+                        style="border: 2px solid #FFFFFF"), 
+                    tags$br(),
+                    tags$br(),
+                    "Once you have completed the information related 
+                    to each risk, the RBM Score Calculator summarizes the 
+                    results on the Report tab. At the bottom of the page you 
+                    will also find a button for downloading a report for filing 
+                    in the trial master file.",
+                    tags$br(),
+                    "Your user feedback is welcome to help us to improve our calculator.")
 
 studpage <- tabItem(tabName = "stud",
                     h2("General Study Information"),
-                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
+                    "",
                     textInput("studyname", "Study title/identifier"),
                     radioButtons("clino_cat", "ClinO risk category", 
                                  c("A", "B", "C"), inline = TRUE),
@@ -43,7 +75,8 @@ studpage <- tabItem(tabName = "stud",
 
 partpage <- tabItem(tabName = "part",
                     h3("I. Participant"),
-                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
+                    "For each of the following risk factors, indicate whether it 
+                    is applicable, and if so, it's impact, occurrence and detectability.",
                     tags$br(),
                     tags$br(),
                     uiOutput("I_vuln_fullcontrol"),
@@ -51,29 +84,38 @@ partpage <- tabItem(tabName = "part",
                     uiOutput("I_comp_fullcontrol")
 )
 
-desipage1 <- tabItem(tabName = "desi1",
-                    h3("II. Design complexity"),
-                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
+desipage <- tabItem(tabName = "desi",
+                    h3("II. Design 1"),
+                    "For each of the following risk factors, indicate whether it 
+                    is applicable, and if so, it's impact, occurrence and detectability.",
                     tags$br(),
                     tags$br(),
-                    uiOutput("IIc_comp_fullcontrol"),
-                    uiOutput("IIc_descomp_fullcontrol"),
-                    uiOutput("IIc_primcomp_fullcontrol")
-    )
-
-desipage2 <- tabItem(tabName = "desi2",
-                    h3("II. Design (other issues)"),
-                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
-                    tags$br(),
-                    tags$br(),
+                    uiOutput("II_comp_fullcontrol"),
+                    uiOutput("II_descomp_fullcontrol"),
+                    uiOutput("II_primcomp_fullcontrol"),
                     uiOutput("II_primbias_fullcontrol"),
+                    # uiOutput("II_trtconcom_fullcontrol"),
+                    # uiOutput("II_proccomp_fullcontrol"),
+                    # uiOutput("II_withdraw_fullcontrol")
+    )
+desipage2 <- tabItem(tabName = "desi2",
+                    h3("II. Design 2"),
+                    "For each of the following risk factors, indicate whether it
+                    is applicable, and if so, it's impact, occurrence and detectability.",
+                    tags$br(),
+                    tags$br(),
+                    # uiOutput("II_comp_fullcontrol"),
+                    # uiOutput("II_descomp_fullcontrol"),
+                    # uiOutput("II_primcomp_fullcontrol"),
+                    # uiOutput("II_primbias_fullcontrol"),
                     uiOutput("II_trtconcom_fullcontrol"),
                     uiOutput("II_proccomp_fullcontrol"),
                     uiOutput("II_withdraw_fullcontrol")
-    )
+)
 safepage <- tabItem(tabName = "safe",
                     h3("III. Safety"),
-                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
+                    "For each of the following risk factors, indicate whether it 
+                    is applicable, and if so, it's impact, occurrence and detectability.",
                     tags$br(),
                     tags$br(),
                     uiOutput("III_reaction_fullcontrol"),
@@ -82,7 +124,8 @@ safepage <- tabItem(tabName = "safe",
                     )
 intepage <- tabItem(tabName = "inte",
                     h3("IV. Intervention (IMP, IMD, surgery, etc.)"),
-                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
+                    "For each of the following risk factors, indicate whether it 
+                    is applicable, and if so, it's impact, occurrence and detectability.",
                     tags$br(),
                     tags$br(),
                     uiOutput("IV_knowledge_fullcontrol"),
@@ -92,7 +135,8 @@ intepage <- tabItem(tabName = "inte",
                     )
 manapage <- tabItem(tabName = "mana",
                     h3("V. Management"),
-                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
+                    "For each of the following risk factors, indicate whether it 
+                    is applicable, and if so, it's impact, occurrence and detectability.",
                     tags$br(),
                     tags$br(),
                     uiOutput("V_sites_fullcontrol"),
@@ -101,7 +145,8 @@ manapage <- tabItem(tabName = "mana",
                     )
 datapage <- tabItem(tabName = "data",
                     h3("VI. Data"),
-                    "For each of the following risk factors, indicate whether it is applicable, and if so, it's impact, occurrence and detectability.",
+                    "For each of the following risk factors, indicate whether it 
+                    is applicable, and if so, it's impact, occurrence and detectability.",
                     tags$br(),
                     tags$br(),
                     uiOutput("VI_datavol_fullcontrol"),
@@ -121,7 +166,8 @@ repopage <- tabItem(tabName = "repo",
                     gt_output("report_summ"),
                     
                     h4("Risk matrix"),
-                    "The outlined box indicates the recommended Risk Based Monitoring strategy for your trial, based on the information you have entered.",
+                    "The outlined box indicates the recommended Risk Based Monitoring 
+                    strategy for your trial, based on the information you have entered.",
                     gt_output("report_matrix"),
                     
                     "Download a PDF report of your results by clicking the 'Generate report' button below",
@@ -138,8 +184,8 @@ ui <- dashboardPage(skin = "red",
             menuItem("Instructions", tabName = "inst", icon = icon("home")),
             menuItem("Study information", tabName = "stud"),
             menuItem("Participants", tabName = "part"),
-            menuItem("Design (complexity)", tabName = "desi1"),
-            menuItem("Design (other)", tabName = "desi2"),
+            menuItem("Design 1", tabName = "desi"),
+            menuItem("Design 2", tabName = "desi2"),
             menuItem("Safety", tabName = "safe"),
             menuItem("Intervention", tabName = "inte"),
             menuItem("Management", tabName = "mana"),
@@ -167,7 +213,7 @@ ui <- dashboardPage(skin = "red",
         tabItems(instpage,
                  studpage,
                  partpage,
-                 desipage1,
+                 desipage,
                  desipage2,
                  safepage,
                  intepage,
@@ -183,44 +229,28 @@ server <- function(input, output, session) {
     
     refs <- texttab$ref
     
+    # gauge output
     lapply(refs, function(x){
-        tmp <- texttab[texttab$ref == x, ]
-        uiname <- paste0(x, "_fullcontrol")
-        output[[uiname]] <- renderUI({
-            fluidPage(
-                box(title = tmp$Risk,
-                    width = 12,
-                    solidHeader = TRUE,
-                    tmp$txt,
-                    # tags$div(tags$ul(
-                    #     tags$li(tmp$bullet1),
-                    #     tags$li(tmp$bullet2),
-                    #     tags$li(tmp$bullet3)
-                    # )),
-                    radioButtons(paste0(x, "_appl"), "Applicable",
-                                 c("Yes" = 1, "No" = 0),
-                                 selected = 1, inline = TRUE),
-                    # message(paste0(x, "_control")),
-                    # message(tmp$bullet1),
-                    # message(tmp$bullet2),
-                    # message(tmp$bullet3),
-                    uiOutput(paste0(x, "_control")),
-                    bsTooltip(paste0(x, "_imp"), tmp$bullet1, options = list(container = "body")),
-                    bsTooltip(paste0(x, "_occ"), tmp$bullet2),
-                    bsTooltip(paste0(x, "_det"), tmp$bullet3),
-                    # radioButtons(paste0(x, "_note_yn"), "Do you want to add a note?",
-                    #              c("Yes" = 1, "No" = 0),
-                    #              selected = 0, inline = TRUE),
-                    # "Notes are recommended for medium and high risks.",
-                    # uiOutput(paste0(x, "_noteUI"))
-                    textInput(paste0(x, "_note"), "Note regarding this risk")
-                )
-            )
+        uiname <- paste0(x, "_gauge")
+        output[[uiname]] <- renderGauge({
+            imp <- input[[paste0(x, "_imp")]]
+            imp <- as.numeric(factor(imp, levels = c("Low", "Moderate", "High")))
+            occ <- input[[paste0(x, "_occ")]]
+            occ <- as.numeric(factor(occ, levels = c("Rare", "Occasional", "Frequent")))
+            det <- input[[paste0(x, "_det")]]
+            det <- as.numeric(factor(det, levels = c("Simple", "Moderate", "Difficult")))
+            if(input[[paste0(x, "_appl")]] == 0){
+                imp <- occ <- det <- 0
+            }
+            gauge(imp * occ * det,
+                  min = 1, max = 27, label = "Risk score",
+                  sectors = gaugeSectors(c(1,3), c(4,9), c(10,27)))
         })
     })
     
     # inputs
     lapply(refs, function(x){
+        tmp <- texttab[texttab$ref == x, ]
         uiname <- paste0(x, "_control")
         output[[uiname]] <- renderUI({
             if(input[[paste0(x, "_appl")]] == 1){
@@ -255,22 +285,40 @@ server <- function(input, output, session) {
         })
     })
     
-    # gauge output
+    # full control
     lapply(refs, function(x){
-        uiname <- paste0(x, "_gauge")
-        output[[uiname]] <- renderGauge({
-            imp <- input[[paste0(x, "_imp")]]
-            imp <- as.numeric(factor(imp, levels = c("Low", "Moderate", "High")))
-            occ <- input[[paste0(x, "_occ")]]
-            occ <- as.numeric(factor(occ, levels = c("Rare", "Occasional", "Frequent")))
-            det <- input[[paste0(x, "_det")]]
-            det <- as.numeric(factor(det, levels = c("Simple", "Moderate", "Difficult")))
-            if(input[[paste0(x, "_appl")]] == 0){
-                imp <- occ <- det <- 0
-            }
-            gauge(imp * occ * det,
-                  min = 1, max = 27, label = "Risk score",
-                  sectors = gaugeSectors(c(1,3), c(4,9), c(10,27)))
+        tmp <- texttab[texttab$ref == x, ]
+        uiname <- paste0(x, "_fullcontrol")
+        output[[uiname]] <- renderUI({
+            fluidPage(
+                box(title = tmp$Risk,
+                    width = 12,
+                    solidHeader = TRUE,
+                    tmp$txt,
+                    # tags$div(tags$ul(
+                    #     tags$li(tmp$bullet1),
+                    #     tags$li(tmp$bullet2),
+                    #     tags$li(tmp$bullet3)
+                    # )),
+                    radioButtons(paste0(x, "_appl"), "Applicable",
+                                 c("Yes" = 1, "No" = 0),
+                                 selected = 1, inline = TRUE),
+                    # message(paste0(x, "_control")),
+                    # message(tmp$bullet1),
+                    # message(tmp$bullet2),
+                    # message(tmp$bullet3),
+                    uiOutput(paste0(x, "_control")),
+                    bsTooltip(paste0(x, "_imp"), tmp$bullet1),
+                    bsTooltip(paste0(x, "_occ"), tmp$bullet2),
+                    bsTooltip(paste0(x, "_det"), tmp$bullet3),
+                    # radioButtons(paste0(x, "_note_yn"), "Do you want to add a note?",
+                    #              c("Yes" = 1, "No" = 0),
+                    #              selected = 0, inline = TRUE),
+                    # "Notes are recommended for medium and high risks.",
+                    # uiOutput(paste0(x, "_noteUI"))
+                    textInput(paste0(x, "_note"), "Note regarding this risk")
+                )
+            )
         })
     })
     
@@ -541,5 +589,8 @@ server <- function(input, output, session) {
 
 # Run the application 
 # shinyApp(ui = ui, server = server, options = list(display.mode = "showcase"))
+# profvis({
+    
 shinyApp(ui = ui, server = server)
+# })
 
