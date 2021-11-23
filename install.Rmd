@@ -1,0 +1,32 @@
+---
+output: 
+  pdf_document: 
+    keep_tex: no
+classoption: landscape, a4paper
+header-includes:
+  - \usepackage[T1]{fontenc}
+  - \usepackage{lastpage}
+  - \usepackage{fancyhdr}
+  - \usepackage{float}
+  - \usepackage{graphicx}
+  - \usepackage{moresize}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage[default]{comfortaa}
+  - \usepackage[T1]{fontenc}
+  - \pagestyle{fancy}
+  - \usepackage{hyperref}
+  - \usepackage{lscape}
+  - \usepackage{pdflscape}
+---
+
+
+```{r echo = FALSE, message = FALSE, warning=FALSE}
+# R libraries
+library(gt)
+library(dplyr)
+library(magrittr)
+library(tidyr)
+library(btabler)
+library(flextable)
+```
