@@ -300,9 +300,9 @@ server <- function(input, output, session) {
                     #     tags$li(tmp$bullet2),
                     #     tags$li(tmp$bullet3)
                     # )),
-                    radioButtons(paste0(x, "_appl"), "Applicable",
+                    radioButtons(paste0(x, "_appl"), "Is this risk applicable to your trial?",
                                  c("Yes" = 1, "No" = 0),
-                                 selected = 1, inline = TRUE),
+                                 selected = 0, inline = TRUE),
                     # message(paste0(x, "_control")),
                     # message(tmp$bullet1),
                     # message(tmp$bullet2),
