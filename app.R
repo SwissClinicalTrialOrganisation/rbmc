@@ -19,8 +19,6 @@ library(tidyr)
 library(shinybusy)
 library(shinyBS)
 library(shinyWidgets)
-library(promises)
-library(future)
 
 texttab <- read.csv("texttable.csv")
 
