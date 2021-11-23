@@ -504,7 +504,8 @@ server <- function(input, output, session) {
                                                  bins = c(1, 4, 10, 27)),
                        apply_to = "text") %>% 
             cols_align(columns = 2:5, 
-                       align = "center")
+                       align = "center") %>% 
+            tab_options(table.font.size = "normal")
     })
     
     summtab <- reactive({
@@ -528,7 +529,8 @@ server <- function(input, output, session) {
         summtab() %>% 
             rename('Risk Level' = Var1,
                    'Risks in Level' = Freq) %>%
-            gt() 
+            gt()  %>% 
+            tab_options(table.font.size = "normal")
     })
     
     
@@ -548,7 +550,8 @@ server <- function(input, output, session) {
                                              columns = paste("ClinO", input$clino_cat)),
                       style = list(cell_borders(weight = px(5), color = "black"), 
                                    cell_text(weight = "bolder"))
-                      )
+                      ) %>% 
+            tab_options(table.font.size = "normal")
         
         
     })
@@ -564,7 +567,8 @@ server <- function(input, output, session) {
             cols_align(align = "center") %>% 
             data_color(columns = c('ClinO A', 'ClinO B', 'ClinO C'),
                        colors = scales::col_factor(palette = c("green", "yellow", "orange"),
-                                                   levels = c('low-risk', 'medium-risk', 'high-risk'))) 
+                                                   levels = c('low-risk', 'medium-risk', 'high-risk'))) %>% 
+            tab_options(table.font.size = "normal")
         
     })
 
