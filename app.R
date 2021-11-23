@@ -41,6 +41,9 @@ instpage <- tabItem(tabName = "inst",
                     and the detectability of the risk. ",
                     tags$br(),
                     tags$br(),
+                    gt_output("report_matrix_intro"),
+                    tags$br(),
+                    tags$br(),
                     "As an example, consider a trial with very complicated inclusion 
                     criteria. The impact of having such a complicated inclusion 
                     criteria is high because you risk including participants that 
@@ -547,6 +550,21 @@ server <- function(input, output, session) {
                                    cell_text(weight = "bolder"))
                       )
         
+        
+    })
+    
+    output$report_matrix_intro <- render_gt({
+        
+        tibble::tribble(~'Number of risks', ~'ClinO A', ~'ClinO B', ~'ClinO C',
+                        'Less than 6 medium risks, no high risks', 'low-risk', 'low-risk', 'medium-risk',
+                        '6 to 12 medium risks or 1 high risk', 'low-risk', 'medium-risk', 'high-risk',
+                        'More than 12 medium risks, more than 1 high risk', 'medium-risk', 'high-risk', 'high-risk'
+                        ) %>%
+            gt() %>%
+            cols_align(align = "center") %>% 
+            data_color(columns = c('ClinO A', 'ClinO B', 'ClinO C'),
+                       colors = scales::col_factor(palette = c("green", "yellow", "orange"),
+                                                   levels = c('low-risk', 'medium-risk', 'high-risk'))) 
         
     })
 
