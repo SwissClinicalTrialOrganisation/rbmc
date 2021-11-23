@@ -40,6 +40,8 @@ instpage <- tabItem(tabName = "inst",
                     on the trial, the frequency with which the risk might happen 
                     and the detectability of the risk. ",
                     tags$br(),
+                    "Once all risks are entered, the trial risk is calculated based 
+                    on the frequency of high, medium and low risks, as depicted below.",
                     tags$br(),
                     gt_output("report_matrix_intro"),
                     tags$br(),
