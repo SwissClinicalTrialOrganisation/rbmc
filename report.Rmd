@@ -250,10 +250,10 @@ tmp2 %>%
 
 \end{landscape}
 
-\pagebreak
+<!-- \pagebreak -->
 
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, eval = FALSE}
 
 mat %>%
   flextable() %>% 
