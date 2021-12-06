@@ -89,7 +89,7 @@ partpage <- tabItem(tabName = "part",
 )
 
 desipage <- tabItem(tabName = "desi",
-                    h3("II. Design 1"),
+                    h3("II. Design"),
                     "For each of the following risk factors, indicate whether it 
                     is applicable, and if so, it's impact, occurrence and detectability.",
                     tags$br(),
@@ -188,7 +188,7 @@ ui <- dashboardPage(skin = "red",
             menuItem("Instructions", tabName = "inst", icon = icon("home")),
             menuItem("Study information", tabName = "stud"),
             menuItem("Participants", tabName = "part"),
-            menuItem("Design 1", tabName = "desi"),
+            menuItem("Design", tabName = "desi"),
             # menuItem("Design 2", tabName = "desi2"),
             menuItem("Safety", tabName = "safe"),
             menuItem("Intervention", tabName = "inte"),
