@@ -19,6 +19,7 @@ library(tidyr)
 library(shinybusy)
 library(shinyBS)
 library(shinyWidgets)
+library(shinyjs)
 
 texttab <- read.csv("texttable.csv")
 
@@ -97,24 +98,24 @@ desipage <- tabItem(tabName = "desi",
                     uiOutput("II_descomp_fullcontrol"),
                     uiOutput("II_primcomp_fullcontrol"),
                     uiOutput("II_primbias_fullcontrol"),
-                    # uiOutput("II_trtconcom_fullcontrol"),
-                    # uiOutput("II_proccomp_fullcontrol"),
-                    # uiOutput("II_withdraw_fullcontrol")
-    )
-desipage2 <- tabItem(tabName = "desi2",
-                    h3("II. Design 2"),
-                    "For each of the following risk factors, indicate whether it
-                    is applicable, and if so, it's impact, occurrence and detectability.",
-                    tags$br(),
-                    tags$br(),
-                    # uiOutput("II_comp_fullcontrol"),
-                    # uiOutput("II_descomp_fullcontrol"),
-                    # uiOutput("II_primcomp_fullcontrol"),
-                    # uiOutput("II_primbias_fullcontrol"),
                     uiOutput("II_trtconcom_fullcontrol"),
                     uiOutput("II_proccomp_fullcontrol"),
                     uiOutput("II_withdraw_fullcontrol")
-)
+    )
+# desipage2 <- tabItem(tabName = "desi2",
+#                     h3("II. Design 2"),
+#                     "For each of the following risk factors, indicate whether it
+#                     is applicable, and if so, it's impact, occurrence and detectability.",
+#                     tags$br(),
+#                     tags$br(),
+#                     # uiOutput("II_comp_fullcontrol"),
+#                     # uiOutput("II_descomp_fullcontrol"),
+#                     # uiOutput("II_primcomp_fullcontrol"),
+#                     # uiOutput("II_primbias_fullcontrol"),
+#                     uiOutput("II_trtconcom_fullcontrol"),
+#                     uiOutput("II_proccomp_fullcontrol"),
+#                     uiOutput("II_withdraw_fullcontrol")
+# )
 safepage <- tabItem(tabName = "safe",
                     h3("III. Safety"),
                     "For each of the following risk factors, indicate whether it 
@@ -188,7 +189,7 @@ ui <- dashboardPage(skin = "red",
             menuItem("Study information", tabName = "stud"),
             menuItem("Participants", tabName = "part"),
             menuItem("Design 1", tabName = "desi"),
-            menuItem("Design 2", tabName = "desi2"),
+            # menuItem("Design 2", tabName = "desi2"),
             menuItem("Safety", tabName = "safe"),
             menuItem("Intervention", tabName = "inte"),
             menuItem("Management", tabName = "mana"),
@@ -217,7 +218,7 @@ ui <- dashboardPage(skin = "red",
                  studpage,
                  partpage,
                  desipage,
-                 desipage2,
+                 # desipage2,
                  safepage,
                  intepage,
                  manapage,
@@ -251,43 +252,6 @@ server <- function(input, output, session) {
         })
     })
     
-    # inputs
-    lapply(refs, function(x){
-        tmp <- texttab[texttab$ref == x, ]
-        uiname <- paste0(x, "_control")
-        output[[uiname]] <- renderUI({
-            if(input[[paste0(x, "_appl")]] == 1){
-                # remove white space after fluidRow - works in RStudio, not firefox
-                div(# style = "margin-bottom:-6em; padding: 0px 0px;", 
-                    tags$style(type = "text/css", ".irs-grid-pol.small {height: 0px;}", 
-                               ".html-widget.gauge {margin-bottom: -100px}"),
-                    fluidRow(
-                        column(3,
-                               sliderTextInput(paste0(x, "_imp"),
-                                               label = "Impact", 
-                                               choices = c("Low", "Moderate", "High"), 
-                                               selected = "Low")
-                        ),
-                        column(3,
-                               sliderTextInput(paste0(x, "_occ"),
-                                           label = "Occurrence", 
-                                           choices = c("Rare", "Occasional", "Frequent"), 
-                                           selected = "Rare")
-                        ),
-                        column(3,
-                               sliderTextInput(paste0(x, "_det"),
-                                           label = "Detectability", 
-                                           choices = c("Simple", "Moderate", "Difficult"), 
-                                           selected = "Simple")
-                        )
-                        , column(3,
-                               gaugeOutput(paste0(x, "_gauge")))
-                    ))
-                
-            }
-        })
-    })
-    
     # full control
     lapply(refs, function(x){
         tmp <- texttab[texttab$ref == x, ]
@@ -310,7 +274,36 @@ server <- function(input, output, session) {
                     # message(tmp$bullet1),
                     # message(tmp$bullet2),
                     # message(tmp$bullet3),
-                    uiOutput(paste0(x, "_control")),
+                    # uiOutput(paste0(x, "_control")),
+                    conditionalPanel(
+                        condition = paste0("input.", paste0(x, "_appl") , "== 1"),
+                        
+                    div(# style = "margin-bottom:-6em; padding: 0px 0px;",
+                        tags$style(type = "text/css", ".irs-grid-pol.small {height: 0px;}",
+                                   ".html-widget.gauge {margin-bottom: -100px}"),
+                        fluidRow(
+                            column(3,
+                                   sliderTextInput(paste0(x, "_imp"),
+                                                   label = "Impact",
+                                                   choices = c("Low", "Moderate", "High"),
+                                                   selected = "Low")
+                            ),
+                            column(3,
+                                   sliderTextInput(paste0(x, "_occ"),
+                                                   label = "Occurrence",
+                                                   choices = c("Rare", "Occasional", "Frequent"),
+                                                   selected = "Rare")
+                            ),
+                            column(3,
+                                   sliderTextInput(paste0(x, "_det"),
+                                                   label = "Detectability",
+                                                   choices = c("Simple", "Moderate", "Difficult"),
+                                                   selected = "Simple")
+                            )
+                            , column(3,
+                                     gaugeOutput(paste0(x, "_gauge")))
+                        ))# id = paste0(x, "_controldiv")),
+                    ),
                     bsTooltip(paste0(x, "_imp"), tmp$bullet1),
                     bsTooltip(paste0(x, "_occ"), tmp$bullet2),
                     bsTooltip(paste0(x, "_det"), tmp$bullet3),
