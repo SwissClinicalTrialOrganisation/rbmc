@@ -578,7 +578,7 @@ server <- function(input, output, session) {
         tibble::tribble(~'Number of risks', ~'Swiss categorization A', ~'Swiss categorization B', ~'Swiss categorization C',
                         'Less than 6 medium risks, no high risks', 'low-risk', 'low-risk', 'medium-risk',
                         '6 to 12 medium risks or 1 high risk', 'low-risk', 'medium-risk', 'high-risk',
-                        'More than 12 medium risks, more than 1 high risk', 'medium-risk', 'high-risk', 'high-risk'
+                        'More than 12 medium risks or more than 1 high risk', 'medium-risk', 'high-risk', 'high-risk'
                         ) %>%
             gt() %>%
             cols_align(align = "center") %>% 
