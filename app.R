@@ -593,7 +593,7 @@ server <- function(input, output, session) {
 
     # compile report ----
     output$report <- downloadHandler(
-        filename = "report.pdf",
+        filename = function(){ "SCTO_RBMSC_Report.pdf"},
         content = function(file) {
             # Copy the report file to a temporary directory before processing it, in
             # case we don't have write permissions to the current working dir (which
