@@ -98,7 +98,7 @@ Based on the assumptions fed into the RBM score calculator, the study risk is `r
 ```{r overall-table, echo = FALSE}
 overall <- data.frame(Level = c("High", "Medium", "Low"),
            N = c(params$overall$High, params$overall$Medium, params$overall$Low))
-names(overall)[2] <- "Number of risk factors"
+names(overall)[2] <- "Number of risks"
 overall %>% 
   flextable() %>% 
   flextable::align(j = 2, align = "center", part = "all")
