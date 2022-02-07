@@ -34,16 +34,19 @@ instpage <- tabItem(tabName = "inst",
                     "These user instructions enable you to calculate and determine 
                     the recommended monitoring strategy for a particular clinical 
                     trial you are planning. On the tabs on the left, you will be 
-                    presented with a variety of questions about your trial.",
+                    presented with a variety of topics.",
                     tags$br(),
-                    "For each question, you should indicated the:",
+                    "Several risks are listed in each topic. For each risk, you 
+                    should indicate the:",
                     tags$ul(
-                        tags$li("Impact of the topic on the participants’ safety 
+                        tags$li("Impact of the risk on the participants’ safety 
                                 and rights, data integrity, or Good Clinical Practice 
                                 (GCP) compliance"),
                         tags$li("Occurrence with which the risk might happen"),
                         tags$li("Detectability of the risk by the monitor")
                     ),
+                    "For each risk, a score of 1–3 is considered low, 4–9 as medium, 
+                    and 10–27 as high.",
                     tags$br(),
                     "Once all risks are entered, the RBM Score Calculator provides 
                     you with an overall answer on the trial risk calculated based 
