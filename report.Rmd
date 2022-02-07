@@ -89,8 +89,11 @@ mat <- tibble::tribble(~'Number of risks', ~'ClinO A', ~'ClinO B', ~'ClinO C',
                         'More than 12 medium risks, more than 1 high risk', 'medium', 'high', 'high'
                         ) 
 
+txt <- mat[params$overall$row, paste("ClinO", params$input$clino_cat)]
+txtcol <- c("00ff11", "ffe100", "ffae00")[match(txt, c("low", "medium", "high"))]
+
 ```
-Based on the assumptions fed into the RBM score calculator, the study risk is `r mat[params$overall$row, paste("ClinO", params$input$clino_cat)]` and we thus recommend applying the monitoring strategy for \textbf{`r mat[params$overall$row, paste("ClinO", params$input$clino_cat)]`-risk trials}. 
+Based on the assumptions fed into the RBM score calculator, the study risk is `r txt` and we thus recommend applying the monitoring strategy for \textbf{`r paste0("\\textcolor[HTML]{", txtcol, "}{", txt, "}")`-risk trials}. 
 
 ```{r overall-table, echo = FALSE}
 overall <- data.frame(Level = c("High", "Medium", "Low"),
