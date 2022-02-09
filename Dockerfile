@@ -9,16 +9,20 @@ RUN apt-get update && \
 # copy necessary files
 # start in at level above package
 ## app folder
-COPY www ./www
+COPY www ./app/www
 COPY app.R ./app/app.R
-COPY report.Rmd ./report.Rmd
+COPY report.Rmd ./app/report.Rmd
 COPY install.Rmd ./install.Rmd
+COPY texttable.csv ./app/texttable.csv
 
 # install deps
-RUN Rscript -e 'install.packages(c("gt", "dplyr", "magrittr", "tidyr", "btabler", "flextable", "shiny", "flexdashboard", "shinydashboard", "shinybusy", "shinyBS", "shinyWidgets"))'
+RUN Rscript -e 'install.packages(c("gt", "dplyr", "magrittr", "tidyr", "remotes", "flextable", "shiny", "flexdashboard", "shinydashboard", "shinybusy", "shinyBS", "shinyWidgets", "shinyjs"))'
+RUN Rscript -e 'remotes::install_github("CTU-Bern/btabler")'
 
 # install additional TEX packages
 RUN Rscript -e 'rmarkdown::render("install.Rmd")'
+#RUN Rscript -e 'list.files()'
+#RUN Rscript -e 'shiny::runApp("app")'
 
 # expose port
 EXPOSE 3838
