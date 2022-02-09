@@ -59,9 +59,14 @@ instpage <- tabItem(tabName = "inst",
                       tags$li("Details on the Swiss categorisation (A, B, C) can be found
                                in the Ordinance on Clinical Trials with the exception of 
                                Clinical Trials of Medical Devices (",
-                              tags$a(href = "https://www.fedlex.admin.ch/eli/cc/2013/643/en", "ClinO"), 
+                              tags$a(href = "https://www.fedlex.admin.ch/eli/cc/2013/643/en", 
+                                     "ClinO", 
+                                     target="_blank"), 
                               ") and in the Ordinance on Clinical Trials with Medical Devices (",
-                              tags$a(href = "https://www.fedlex.admin.ch/eli/cc/2020/553/en", "ClinO-MD"),")."),
+                              tags$a(href = "https://www.fedlex.admin.ch/eli/cc/2020/553/en", 
+                                     "ClinO-MD", 
+                                     target="_blank"),
+                              ")."),
                       tags$li(
                               "\tFor medical devices, the sub-categories A1, A2, C1, 
                                C2 and C3 are not further distinguished. Please refer to the 
