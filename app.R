@@ -31,40 +31,72 @@ instpage <- tabItem(tabName = "inst",
                     "was developed by the Monitoring Platform of the Swiss Clinical
                     Trial Organisation (SCTO)." ,
                     tags$br(),
-                    "These user instructions enable you to calculate and determine
+                    "These user instructions enable you to calculate and determine 
                     the recommended monitoring strategy for a particular clinical 
                     trial you are planning. On the tabs on the left, you will be 
-                    presented with a variety of questions about your trial. 
-                    For each question, you should indicated the impact of the topic 
-                    on the trial, the frequency with which the risk might happen 
-                    and the detectability of the risk. ",
+                    presented with a variety of topics.",
                     tags$br(),
-                    "Once all risks are entered, the trial risk is calculated based 
+                    "Several risks are listed in each topic. For each risk, you 
+                    should indicate the:",
+                    tags$ul(
+                        tags$li("Impact of the risk on the participants’ safety 
+                                and rights, data integrity, or Good Clinical Practice 
+                                (GCP) compliance"),
+                        tags$li("Occurrence with which the risk might happen"),
+                        tags$li("Detectability of the risk by the monitor")
+                    ),
+                    "For each risk, a score of 1–3 is considered low, 4–9 as medium, 
+                    and 10–27 as high.",
+                    tags$br(),
+                    "Once all risks are entered, the RBM Score Calculator provides 
+                    you with an overall answer on the trial risk calculated based 
                     on the frequency of high, medium and low risks, as depicted below.",
                     tags$br(),
                     gt_output("report_matrix_intro"),
-                    tags$br(),
-                    tags$br(),
+                    # tags$br(),
+                    "Note:",
+                    tags$ul( 
+                      tags$li("Details on the Swiss categorisation (A, B, C) can be found
+                               in the Ordinance on Clinical Trials with the exception of 
+                               Clinical Trials of Medical Devices (",
+                              tags$a(href = "https://www.fedlex.admin.ch/eli/cc/2013/643/en", 
+                                     "ClinO", 
+                                     target="_blank"), 
+                              ") and in the Ordinance on Clinical Trials with Medical Devices (",
+                              tags$a(href = "https://www.fedlex.admin.ch/eli/cc/2020/553/en", 
+                                     "ClinO-MD", 
+                                     target="_blank"),
+                              ")."),
+                      tags$li(
+                              "\tFor medical devices, the sub-categories A1, A2, C1, 
+                               C2 and C3 are not further distinguished. Please refer to the 
+                              main categories A and C to determine the monitoring strategy.")
+                    ),
                     "As an example, consider a trial with very complicated inclusion 
-                    criteria. The impact of having such a complicated inclusion 
-                    criteria is high because you risk including participants that 
-                    are not eligible for participation. Because of the complexity, 
-                    it might also happen often, so occurence is perhaps occasional. 
-                    Detecting wrongly included participants might also be difficult. 
-                    We can also enter a note of our reasoning.", 
+                    criteria. The potential impact of having such complicated 
+                    inclusion criteria is high on the participants' safety and on 
+                    data integrity because it increases the risk of including 
+                    participants that are not eligible for participation. Depending 
+                    on the number of the complicated inclusion criteria, it might 
+                    happen more or less often. Detecting wrongly included 
+                    participants might also be difficult, and in this case, the 
+                    detectability will not be high. In addition, notes justifying 
+                    the choice can be added.", 
                     tags$br(),
+                    tags$b("Warning: please only enter alphanumeric characters 
+                           in the notes, and avoid special characters (≥, +, 
+                           umlauts, accents, …)"),
                     tags$br(),
                     img(src = "demo.png", 
-                        align = "center", 
                         width="400px", 
-                        style="border: 2px solid #FFFFFF"), 
+                        style="border: 2px solid #FFFFFF; display: block; margin-left: auto; margin-right: auto;"), 
                     tags$br(),
                     tags$br(),
-                    "Once you have completed the information related 
-                    to each risk, the RBM Score Calculator summarizes the 
-                    results on the Report tab. At the bottom of the page you 
-                    will also find a button for downloading a report for filing 
-                    in the trial master file.",
+                    "Once you have completed the information related to each risk, 
+                    the RBM Score Calculator summarizes the results on the Report 
+                    tab. At the bottom of the page you will also find a button to 
+                    download a report. This report will contain all risk factors 
+                    considered for the trial and all notes justifying your choice.",
                     tags$br(),
                     "Your user feedback is welcome to help us to improve our calculator.")
 
@@ -72,8 +104,13 @@ studpage <- tabItem(tabName = "stud",
                     h2("General Study Information"),
                     "",
                     textInput("studyname", "Study title/identifier"),
-                    radioButtons("clino_cat", "ClinO risk category", 
+                    radioButtons("clino_cat", "Swiss risk category", 
                                  c("A", "B", "C"), inline = TRUE),
+                    "Note: For medical devices, the sub-categories A1, A2, C1, 
+                    C2 and C3 are not further distinguished. Please refer to the 
+                    main categories A and C to determine the monitoring strategy.",
+                    tags$br(),
+                    tags$br(),
                     textInput("au", "Your name")
 )
 
@@ -312,7 +349,8 @@ server <- function(input, output, session) {
                     #              selected = 0, inline = TRUE),
                     # "Notes are recommended for medium and high risks.",
                     # uiOutput(paste0(x, "_noteUI"))
-                    textInput(paste0(x, "_note"), "Note regarding this risk")
+                    textInput(paste0(x, "_note"), 
+                              "Note regarding this risk (please avoid special characters)")
                 )
             )
         })
@@ -551,14 +589,16 @@ server <- function(input, output, session) {
     
     output$report_matrix_intro <- render_gt({
         
-        tibble::tribble(~'Number of risks', ~'ClinO A', ~'ClinO B', ~'ClinO C',
+        tibble::tribble(~'Number of risks', ~'Swiss categorization A', ~'Swiss categorization B', ~'Swiss categorization C',
                         'Less than 6 medium risks, no high risks', 'low-risk', 'low-risk', 'medium-risk',
                         '6 to 12 medium risks or 1 high risk', 'low-risk', 'medium-risk', 'high-risk',
-                        'More than 12 medium risks, more than 1 high risk', 'medium-risk', 'high-risk', 'high-risk'
+                        'More than 12 medium risks or more than 1 high risk', 'medium-risk', 'high-risk', 'high-risk'
                         ) %>%
             gt() %>%
             cols_align(align = "center") %>% 
-            data_color(columns = c('ClinO A', 'ClinO B', 'ClinO C'),
+            data_color(columns = c('Swiss categorization A', 
+                                   'Swiss categorization B', 
+                                   'Swiss categorization C'),
                        colors = scales::col_factor(palette = c("green", "yellow", "orange"),
                                                    levels = c('low-risk', 'medium-risk', 'high-risk'))) %>% 
             tab_options(table.font.size = "normal")
@@ -567,7 +607,11 @@ server <- function(input, output, session) {
 
     # compile report ----
     output$report <- downloadHandler(
-        filename = "report.pdf",
+        filename = function(studyname = input$studyname){ 
+            paste0("SCTO_RBMSC_Report_", 
+                   gsub(" ", "", tools::toTitleCase(studyname)), 
+                   ".pdf")
+            },
         content = function(file) {
             # Copy the report file to a temporary directory before processing it, in
             # case we don't have write permissions to the current working dir (which
