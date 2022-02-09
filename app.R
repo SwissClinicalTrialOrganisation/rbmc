@@ -54,10 +54,19 @@ instpage <- tabItem(tabName = "inst",
                     tags$br(),
                     gt_output("report_matrix_intro"),
                     # tags$br(),
-                    "Note: For medical devices, the sub-categories A1, A2, C1, 
-                    C2 and C3 are not further distinguished. Please refer to the 
-                    main categories A and C to determine the monitoring strategy.",
-                    tags$br(),
+                    "Note:",
+                    tags$ul( 
+                      tags$li("Details on the Swiss categorisation (A, B, C) can be found
+                               in the Ordinance on Clinical Trials with the exception of 
+                               Clinical Trials of Medical Devices (",
+                              tags$a(href = "https://www.fedlex.admin.ch/eli/cc/2013/643/en", "ClinO"), 
+                              ") and in the Ordinance on Clinical Trials with Medical Devices (",
+                              tags$a(href = "https://www.fedlex.admin.ch/eli/cc/2020/553/en", "ClinO-MD"),")."),
+                      tags$li(
+                              "\tFor medical devices, the sub-categories A1, A2, C1, 
+                               C2 and C3 are not further distinguished. Please refer to the 
+                              main categories A and C to determine the monitoring strategy.")
+                    ),
                     "As an example, consider a trial with very complicated inclusion 
                     criteria. The potential impact of having such complicated 
                     inclusion criteria is high on the participants' safety and on 
@@ -593,7 +602,11 @@ server <- function(input, output, session) {
 
     # compile report ----
     output$report <- downloadHandler(
-        filename = function(){ "SCTO_RBMSC_Report.pdf"},
+        filename = function(studyname = input$studyname){ 
+            paste0("SCTO_RBMSC_Report_", 
+                   gsub(" ", "", tools::toTitleCase(studyname)), 
+                   ".pdf")
+            },
         content = function(file) {
             # Copy the report file to a temporary directory before processing it, in
             # case we don't have write permissions to the current working dir (which

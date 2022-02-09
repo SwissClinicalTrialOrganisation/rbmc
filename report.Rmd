@@ -56,7 +56,7 @@ set_flextable_defaults(fonts_ignore = TRUE,
 \fancyhead[L]{`r params$input$studyname`}
 \cfoot[\fancyplain{}{}]{\fancyplain{}{}}
 \rfoot{\thepage\ of \pageref{LastPage}}
-\lfoot{Produced with \href{https://aghaynes.shinyapps.io/rbmc}{RBMC}}
+\lfoot{Produced with \href{https://aghaynes.shinyapps.io/rbmc}{RBMSC}}
 \thispagestyle{fancy}
 
 <!-- Report content -->
