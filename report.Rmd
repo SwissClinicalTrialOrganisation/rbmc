@@ -93,6 +93,9 @@ txt <- mat[params$overall$row, paste("ClinO", params$input$clino_cat)]
 # txtcol <- c("00ff11", "ffe100", "ffae00")[match(txt, c("low", "medium", "high"))]
 
 ```
+
+Swiss risk category: `r inputs$clino_cat`
+
 Based on the assumptions fed into the RBM score calculator, the study risk is `r txt` and we thus recommend applying the monitoring strategy for \textbf{`r txt`-risk trials}. 
 
 ```{r overall-table, echo = FALSE}
