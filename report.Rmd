@@ -31,7 +31,7 @@ library(gt)
 library(dplyr)
 library(magrittr)
 library(tidyr)
-library(btabler)
+library(xtable)
 library(flextable)
 set_flextable_defaults(fonts_ignore = TRUE, 
                        font.size = 9)
@@ -56,7 +56,7 @@ set_flextable_defaults(fonts_ignore = TRUE,
 \fancyhead[L]{`r params$input$studyname`}
 \cfoot[\fancyplain{}{}]{\fancyplain{}{}}
 \rfoot{\thepage\ of \pageref{LastPage}}
-\lfoot{Produced with \href{https://aghaynes.shinyapps.io/rbmc}{RBMSC}}
+\lfoot{Produced with \href{https://aghaynes.shinyapps.io/rbmc}{RBMSC}, V1.1}
 \thispagestyle{fancy}
 
 <!-- Report content -->
@@ -93,6 +93,9 @@ txt <- mat[params$overall$row, paste("ClinO", params$input$clino_cat)]
 # txtcol <- c("00ff11", "ffe100", "ffae00")[match(txt, c("low", "medium", "high"))]
 
 ```
+
+Swiss risk category: `r inputs$clino_cat`
+
 Based on the assumptions fed into the RBM score calculator, the study risk is `r txt` and we thus recommend applying the monitoring strategy for \textbf{`r txt`-risk trials}. 
 
 ```{r overall-table, echo = FALSE}
